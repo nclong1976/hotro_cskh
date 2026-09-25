@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./cskh-store.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Be Vietnam Pro',sans-serif;background:#FAFAFB;color:#1E293B;-webkit-font-smoothing:antialiased}
+a{color:#C8102E;text-decoration:none}a:hover{color:#a30c24}
+@keyframes vgPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.15)}}
+@keyframes vgDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+textarea:focus,input:focus{outline:none}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid #C8102E;outline-offset:2px}
+</style>
+</helmet>
+<div style="height:100vh;display:flex;flex-direction:column;overflow:hidden">
+  <header style="flex:none;background:#fff;border-bottom:1px solid rgba(226,232,240,.8)">
+    <div style="padding:0 24px;height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex:none;box-shadow:0 4px 8px rgba(200,16,46,.2);background:#e5e7eb"><img src="https://inviva.vn/wp-content/uploads/2026/04/logo-vingroup-vector-01.png" alt="Vingroup" style="width:100%;height:100%;object-fit:contain"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;color:#C8102E">Trang Quản Trị CSKH</span>
+          <span style="font-size:20px;font-weight:700;letter-spacing:-.02em;color:#0F172A;line-height:1;white-space:nowrap">VINGROUP <span style="font-weight:300;color:#64748B;font-size:14px;letter-spacing:0">Live Chat Console</span></span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <sc-if value="{{ showStats }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:8px">
+          <sc-for list="{{ stats }}" as="st" hint-placeholder-count="3">
+            <div style="background:#F8FAFC;border:1px solid #F1F5F9;border-radius:12px;padding:6px 14px;white-space:nowrap">
+              <div style="font-size:11px;color:#94A3B8">{{ st.label }}</div>
+              <div style="font-size:15px;font-weight:700;color:#0F172A">{{ st.value }}</div>
+            </div>
+          </sc-for>
+        </div></sc-if>
+        <button onClick="{{ toggleAvail }}" style="{{ availStyle }}">
+          <span style="{{ availDot }}"></span>{{ availLabel }}
+        </button>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#C8102E,#8f0b21);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">TL</div>
+          <div style="display:flex;flex-direction:column;white-space:nowrap">
+            <span style="font-size:14px;font-weight:600;color:#0F172A">Nguyễn Thùy Linh</span>
+            <span style="font-size:11px;color:#94A3B8">Tổng đài viên · Ca sáng</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main style="flex:1;min-height:0;display:flex;gap:16px;padding:16px">
+    <aside style="width:320px;flex:none;display:flex;flex-direction:column;background:#fff;border:1px solid #E2E8F0;border-radius:20px;overflow:hidden">
+      <div style="padding:16px 16px 12px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid #F1F5F9">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:16px;font-weight:700;color:#0F172A">Hội thoại</span>
+          <span style="font-size:12px;color:#64748B">{{ listCount }}</span>
+        </div>
+        <div style="position:relative">
+          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94A3B8;display:flex"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3" stroke-linecap="round"></path></svg></span>
+          <input value="{{ q }}" onChange="{{ onQ }}" placeholder="Tìm khách hàng…" style="width:100%;box-sizing:border-box;padding:10px 12px 10px 36px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;font:inherit;font-size:13px;color:#0F172A" style-focus="border-color:#C8102E;background:#fff">
+        </div>
+        <div style="display:flex;gap:4px;background:#F1F5F9;border-radius:10px;padding:3px">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+            <button onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }} <span style="{{ t.badge }}">{{ t.count }}</span></button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ convs }}" as="c" hint-placeholder-count="5">
+          <button onClick="{{ c.pick }}" style="{{ c.style }}">
+            <div style="position:relative;flex:none">
+              <div style="{{ c.avatar }}">{{ c.initials }}</div>
+              <sc-if value="{{ c.online }}"><span style="position:absolute;right:0;bottom:0;width:10px;height:10px;border-radius:50%;background:#10B981;border:2px solid #fff"></span></sc-if>
+            </div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+              <div style="display:flex;justify-content:space-between;gap:8px">
+                <span style="font-size:14px;font-weight:600;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+                <span style="font-size:11px;color:#94A3B8;flex:none">{{ c.time }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                <span style="font-size:12px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.preview }}</span>
+                <sc-if value="{{ c.unread }}"><span style="flex:none;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#C8102E;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.unread }}</span></sc-if>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span style="font-size:11px;font-weight:500;color:#475569;background:#F1F5F9;border-radius:6px;padding:2px 8px">{{ c.service }}</span>
+                <sc-if value="{{ c.waitText }}"><span style="font-size:11px;font-weight:600;color:#B45309">{{ c.waitText }}</span></sc-if>
+              </div>
+            </div>
+          </button>
+        </sc-for>
+        <sc-if value="{{ emptyList }}">
+          <div style="padding:40px 16px;text-align:center;font-size:13px;color:#94A3B8">Chưa có hội thoại nào</div>
+        </sc-if>
+      </div>
+    </aside>
+
+    <section style="flex:1;min-width:0;display:flex;flex-direction:column;background:#fff;border:1px solid #E2E8F0;border-radius:20px;overflow:hidden;box-shadow:0 20px 40px -15px rgba(200,16,46,.06)">
+      <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid #F1F5F9">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0">
+          <div style="{{ cur.avatar }}">{{ cur.initials }}</div>
+          <div style="min-width:0">
+            <div style="font-weight:700;color:#0F172A;font-size:15px">{{ cur.name }}</div>
+            <div style="font-size:12px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ cur.ticket }} · {{ cur.service }} · {{ cur.statusText }}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <sc-if value="{{ cur.isWaiting }}">
+            <button onClick="{{ accept }}" style="font:inherit;font-size:13px;font-weight:700;color:#fff;background:#C8102E;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;white-space:nowrap" style-hover="background:#a30c24">Nhận hỗ trợ</button>
+          </sc-if>
+          <sc-if value="{{ cur.isActive }}">
+            <button onClick="{{ transfer }}" style="font:inherit;font-size:13px;font-weight:600;color:#334155;background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E;color:#C8102E">Chuyển tiếp</button>
+            <button onClick="{{ closeConv }}" style="font:inherit;font-size:13px;font-weight:600;color:#C8102E;background:#FEF2F2;border:1px solid transparent;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E">Đóng hội thoại</button>
+          </sc-if>
+          <sc-if value="{{ cur.isClosed }}">
+            <button onClick="{{ reopen }}" style="font:inherit;font-size:13px;font-weight:600;color:#334155;background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E;color:#C8102E">Mở lại</button>
+          </sc-if>
+        </div>
+      </div>
+
+      <div ref="{{ scrollRef }}" style="flex:1;min-height:0;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:12px;background:#FAFAFB">
+        <sc-for list="{{ messages }}" as="m" hint-placeholder-count="4">
+          <sc-if value="{{ m.isSystem }}">
+            <div style="align-self:center;font-size:12px;color:#64748B;background:#F1F5F9;padding:5px 12px;border-radius:999px">{{ m.text }}</div>
+          </sc-if>
+          <sc-if value="{{ m.isCustomer }}">
+            <div style="display:flex;align-items:flex-end;gap:8px;max-width:72%">
+              <div style="{{ cur.avatarSm }}">{{ cur.initials }}</div>
+              <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0">
+                <sc-if value="{{ m.image }}"><button onClick="{{ m.open }}" style="padding:0;border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;cursor:zoom-in;background:#fff;max-width:240px"><img src="{{ m.image }}" alt="Ảnh khách gửi" style="display:block;width:100%;max-height:260px;object-fit:cover"></button></sc-if>
+                <sc-if value="{{ m.text }}"><div style="background:#fff;border:1px solid #E2E8F0;color:#1E293B;padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word">{{ m.text }}</div></sc-if>
+                <span style="font-size:11px;color:#94A3B8;padding:0 4px">{{ m.time }}</span>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ m.isAgent }}">
+            <div style="align-self:flex-end;display:flex;align-items:center;gap:6px;max-width:72%">
+              <button onClick="{{ m.del }}" title="Xóa tin nhắn" style="flex:none;width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:#CBD5E1;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#FEF2F2;color:#C8102E"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4h6v3" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:0">
+                <sc-if value="{{ m.image }}"><button onClick="{{ m.open }}" style="padding:0;border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;cursor:zoom-in;background:#fff;max-width:240px"><img src="{{ m.image }}" alt="Ảnh đã gửi" style="display:block;width:100%;max-height:260px;object-fit:cover"></button></sc-if>
+                <sc-if value="{{ m.text }}"><div style="background:#C8102E;color:#fff;padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word">{{ m.text }}</div></sc-if>
+                <span style="font-size:11px;color:#94A3B8;padding:0 4px;display:flex;align-items:center;gap:4px">{{ m.time }} · <span style="{{ m.readStyle }}">{{ m.readText }}</span></span>
+              </div>
+            </div>
+          </sc-if>
+        </sc-for>
+        <sc-if value="{{ custTyping }}">
+          <div style="display:flex;align-items:flex-end;gap:8px">
+            <div style="{{ cur.avatarSm }}">{{ cur.initials }}</div>
+            <div style="background:#fff;border:1px solid #E2E8F0;padding:12px 16px;border-radius:16px 16px 16px 4px;display:flex;gap:4px">{{ dots }}</div>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ cur.isWaiting }}">
+        <div style="flex:none;padding:18px 20px;border-top:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#FFFBEB">
+          <span style="font-size:13px;color:#92400E">Khách hàng đang chờ {{ cur.waitText }}. Nhận hỗ trợ để bắt đầu trả lời.</span>
+          <button onClick="{{ accept }}" style="font:inherit;font-size:13px;font-weight:700;color:#fff;background:#C8102E;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;white-space:nowrap" style-hover="background:#a30c24">Nhận hỗ trợ</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ cur.isClosed }}">
+        <div style="flex:none;padding:18px 20px;border-top:1px solid #F1F5F9;font-size:13px;color:#64748B;text-align:center">Hội thoại đã đóng · Khách hàng đánh giá {{ cur.rating }}</div>
+      </sc-if>
+      <sc-if value="{{ cur.isActive }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:none;padding:12px 16px 16px;border-top:1px solid #F1F5F9;background:#fff;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <sc-for list="{{ templates }}" as="tp" hint-placeholder-count="4">
+              <button onClick="{{ tp.use }}" style="font:inherit;font-size:12px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:999px;padding:5px 12px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E;color:#C8102E">{{ tp.label }}</button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ pendingImage }}">
+            <div style="position:relative;align-self:flex-start">
+              <img src="{{ pendingImage }}" alt="Ảnh chuẩn bị gửi" style="display:block;height:64px;border-radius:10px;border:1px solid #E2E8F0">
+              <button onClick="{{ clearImage }}" title="Bỏ ảnh" style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;border:none;background:#0F172A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"></path></svg></button>
+            </div>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:8px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:6px 6px 6px 8px">
+            <input ref="{{ fileRef }}" type="file" accept="image/*" onChange="{{ onFile }}" style="display:none">
+            <button onClick="{{ pickFile }}" title="Gửi hình ảnh cho khách hàng" style="width:36px;height:36px;flex:none;border-radius:10px;border:none;background:transparent;color:#64748B;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#FEF2F2;color:#C8102E"><svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+            <textarea value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" onPaste="{{ onPaste }}" rows="1" placeholder="Nhập phản hồi hoặc dán ảnh (Ctrl+V)…" style="flex:1;min-width:0;height:36px;box-sizing:border-box;overflow:hidden;resize:none;border:none;background:transparent;font:inherit;font-size:14px;color:#1E293B;padding:8px 0;line-height:1.45"></textarea>
+            <button onClick="{{ send }}" style="height:36px;flex:none;border-radius:10px;border:none;background:#C8102E;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;padding:0 16px;font:inherit;font-weight:600;font-size:14px" style-hover="background:#a30c24"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"></path></svg>Gửi</button>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <sc-if value="{{ showInfo }}" hint-placeholder-val="{{ true }}">
+    <aside style="width:300px;flex:none;display:flex;flex-direction:column;gap:16px;overflow-y:auto">
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="{{ cur.avatarLg }}">{{ cur.initials }}</div>
+          <div style="min-width:0">
+            <div style="font-size:16px;font-weight:700;color:#0F172A">{{ cur.name }}</div>
+            <div style="font-size:12px;color:#64748B;margin-top:2px">{{ cur.tier }}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ cur.fields }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px">
+              <span style="color:#94A3B8">{{ f.k }}</span>
+              <span style="color:#1E293B;font-weight:500;text-align:right">{{ f.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:20px;padding:20px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#334155;margin-bottom:12px">Lịch sử yêu cầu</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ cur.history }}" as="h" hint-placeholder-count="2">
+            <div style="background:#F8FAFC;border-radius:12px;padding:10px 12px">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:#94A3B8"><span>{{ h.id }}</span><span>{{ h.date }}</span></div>
+              <div style="font-size:13px;color:#1E293B;margin-top:4px">{{ h.title }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:20px;padding:20px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#334155;margin-bottom:10px">Ghi chú nội bộ</div>
+        <textarea value="{{ note }}" onChange="{{ onNote }}" placeholder="Chỉ tổng đài viên nhìn thấy…" rows="4" style="width:100%;box-sizing:border-box;resize:vertical;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:10px 12px;font:inherit;font-size:13px;color:#1E293B;line-height:1.5"></textarea>
+      </div>
+    </aside>
+    </sc-if>
+  </main>
+
+  <sc-if value="{{ toast }}">
+    <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#0F172A;color:#fff;font-size:13px;padding:10px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(15,23,42,.3);z-index:90">{{ toast }}</div>
+  </sc-if>
+  <sc-if value="{{ lightbox }}">
+    <div onClick="{{ closeLightbox }}" style="position:fixed;inset:0;background:rgba(15,23,42,.85);display:flex;align-items:center;justify-content:center;z-index:100;padding:40px;cursor:zoom-out">
+      <img src="{{ lightbox }}" alt="Hình ảnh cỡ đầy đủ" style="max-width:100%;max-height:100%;border-radius:12px">
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showCustomerPanel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const AGENT = 'Nguyễn Thùy Linh';
+const PALETTE = ['#C8102E', '#0E7490', '#7C3AED', '#B45309', '#15803D', '#BE185D'];
+const colorOf = id => PALETTE[String(id).split('').reduce((a, ch) => a + ch.charCodeAt(0), 0) % PALETTE.length];
+const mins = ms => Math.max(0, Math.floor(ms / 60000));
+const secs = ms => { const s = Math.round(ms / 1000); return s < 60 ? s + 's' : Math.floor(s / 60) + 'p' + String(s % 60).padStart(2, '0'); };
+const TEMPLATES = [
+  ['Chào hỏi', 'Dạ em chào Quý khách, em là Thùy Linh – chuyên viên CSKH Vingroup. Em có thể hỗ trợ gì cho Quý khách ạ?'],
+  ['Xin chờ', 'Quý khách vui lòng đợi trong giây lát, em đang kiểm tra thông tin trên hệ thống ạ.'],
+  ['Xin thông tin', 'Quý khách vui lòng cung cấp số điện thoại đăng ký hoặc mã khách hàng để em tra cứu ạ.'],
+  ['Kết thúc', 'Cảm ơn Quý khách đã liên hệ Vingroup. Chúc Quý khách một ngày tốt lành!']
+];
+const seedConvs = (uid) => {
+  const t = Date.now(), m = n => t - n * 60000;
+  const msg = (from, text, n, extra) => Object.assign({ id: uid(), from, text, ts: m(n) }, extra || {});
+  const base = { customerOnline: false, rating: 0, note: '', history: [], demo: true };
+  return [
+    Object.assign({}, base, { id: uid(), ticket: '#VG-240918', name: 'Trần Minh Quân', initials: 'MQ', identity: '0912 345 678', phone: '0912 345 678', vinid: 'VID-88213', service: 'VinFast', status: 'active', createdAt: m(14), acceptedAt: m(13.5), updatedAt: m(12), agentName: AGENT, tier: 'Khách hàng VinFast · Hạng Vàng', asset: 'VF 8 · 30A-123.45',
+      history: [{ id: '#VG-231104', date: '04/11/2025', title: 'Đặt lịch bảo dưỡng 12.000 km' }, { id: '#VG-230712', date: '12/07/2025', title: 'Cập nhật phần mềm OTA' }],
+      messages: [msg('system', 'Khách hàng bắt đầu hội thoại', 14), msg('customer', 'Chào em, xe VF 8 của anh báo lỗi áp suất lốp dù đã bơm đủ.', 14, { seen: true }), msg('agent', 'Dạ em chào anh Quân. Anh cho em xin ảnh màn hình cảnh báo trên xe để em kiểm tra ạ.', 13, { read: true }), msg('customer', 'Anh đang ở ngoài, lát anh gửi em nhé.', 12, { seen: true })] }),
+    Object.assign({}, base, { id: uid(), ticket: '#VG-240915', name: 'Nguyễn Hoàng Yến', initials: 'HY', identity: '0934 556 677', phone: '0934 556 677', vinid: 'VID-40218', service: 'Vinmec', status: 'active', createdAt: m(40), acceptedAt: m(39.4), updatedAt: m(35), agentName: AGENT, tier: 'Khách hàng Vinmec', asset: 'Hồ sơ BN-102934',
+      history: [{ id: '#VG-240210', date: '10/02/2026', title: 'Đặt lịch khám tổng quát' }],
+      messages: [msg('customer', 'Bác sĩ có lịch khám chiều thứ 7 không ạ?', 40, { seen: true }), msg('agent', 'Dạ còn khung 14:00 và 15:30 ạ. Chị muốn chọn khung nào?', 35, { read: false })] }),
+    Object.assign({}, base, { id: uid(), ticket: '#VG-240901', name: 'Võ Thanh Tùng', initials: 'TT', identity: '0977 443 221', phone: '0977 443 221', vinid: 'VID-33019', service: 'VinFast', status: 'closed', createdAt: m(90), acceptedAt: m(89.6), updatedAt: m(70), agentName: AGENT, rating: 5, tier: 'Khách hàng VinFast', asset: 'VF e34 · 51H-678.90',
+      messages: [msg('customer', 'Cảm ơn em đã hỗ trợ.', 72, { seen: true }), msg('agent', 'Dạ không có gì ạ. Chúc anh một ngày tốt lành!', 71, { read: true }), msg('system', 'Tổng đài viên đã đóng hội thoại', 70)] })
+  ];
+};
+const EMPTY = { id: null, name: 'Chưa có hội thoại', initials: '—', ticket: '—', service: '—', status: 'none', messages: [], history: [] };
+
+class Component extends DCLogic {
+  state = { data: { convs: [] }, activeId: null, tab: 'waiting', q: '', draft: '', pendingImage: null, available: true, typing: {}, lightbox: null, toast: '', wide: true, mid: true };
+  scrollRef = React.createRef();
+  fileRef = React.createRef();
+
+  componentDidMount() {
+    this.onResize = () => { const w = window.innerWidth >= 1180; const m = window.innerWidth >= 1100; if (w !== this.state.wide || m !== this.state.mid) this.setState({ wide: w, mid: m }); };
+    this.onResize(); window.addEventListener('resize', this.onResize);
+    const st = window.VGStore; if (!st) return;
+    st.mutate(d => { if (!d.seeded) { d.seeded = true; d.convs.push(...seedConvs(st.uid)); } });
+    const d0 = st.load();
+    this.known = new Set(d0.convs.map(c => c.id));
+    const first = d0.convs.find(c => c.status === 'waiting') || d0.convs.find(c => c.status === 'active') || d0.convs[0];
+    if (first) this.setState({ activeId: first.id, tab: first.status });
+    this.unsub = st.subscribe(d => this.onData(d));
+    this.unsig = st.onSignal(sig => {
+      if (!sig || sig.type !== 'typing' || sig.from !== 'customer') return;
+      this.setState(s => ({ typing: Object.assign({}, s.typing, { [sig.convId]: sig.on }) }));
+      clearTimeout(this['tt' + sig.convId]);
+      if (sig.on) this['tt' + sig.convId] = setTimeout(() => this.setState(s => ({ typing: Object.assign({}, s.typing, { [sig.convId]: false }) })), 6000);
+    });
+    this.onVis = () => this.onData(st.load());
+    document.addEventListener('visibilitychange', this.onVis);
+    this.onMsg = e => { const d = e.data; if (d && d.type === 'vg-focus') { const c = st.get(d.id); if (c) { this.setState({ activeId: c.id, tab: c.status, q: '' }); this.onData(st.load()); } } };
+    window.addEventListener('message', this.onMsg);
+    this.tick = setInterval(() => this.forceUpdate(), 20000);
+    setTimeout(() => this.onData(st.load()), 0);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.onResize);
+    this.unsub && this.unsub(); this.unsig && this.unsig();
+    document.removeEventListener('visibilitychange', this.onVis);
+    window.removeEventListener('message', this.onMsg);
+    clearInterval(this.tick); clearTimeout(this.toastT);
+  }
+  componentDidUpdate(pp, ps) {
+    const el = this.scrollRef.current;
+    if (el && (ps.data !== this.state.data || ps.activeId !== this.state.activeId || ps.typing !== this.state.typing)) el.scrollTop = el.scrollHeight;
+  }
+
+  onData(d) {
+    const fresh = d.convs.filter(c => !this.known.has(c.id));
+    fresh.forEach(c => this.known.add(c.id));
+    if (fresh.length) {
+      this.flash('Khách hàng mới đang chờ: ' + fresh[0].name);
+      if (!this.state.activeId || !d.convs.find(c => c.id === this.state.activeId)) this.setState({ activeId: fresh[0].id, tab: 'waiting' });
+    }
+    const act = d.convs.find(c => c.id === this.state.activeId);
+    if (act && document.visibilityState === 'visible' && act.messages.some(m => m.from === 'customer' && !m.seen)) {
+      window.VGStore.updateConv(act.id, x => x.messages.forEach(m => { if (m.from === 'customer') m.seen = true; }));
+      return;
+    }
+    this.setState({ data: d });
+  }
+  flash(t) { clearTimeout(this.toastT); this.setState({ toast: t }); this.toastT = setTimeout(() => this.setState({ toast: '' }), 2600); }
+  cur() { const cs = this.state.data.convs; return cs.find(c => c.id === this.state.activeId) || null; }
+  sys(x, text) { x.messages.push({ id: window.VGStore.uid(), from: 'system', text, ts: Date.now() }); x.updatedAt = Date.now(); }
+  typingSig(on) {
+    const c = this.cur(); if (!c) return;
+    const t = Date.now();
+    if (on && this.lastSig && t - this.lastSig < 1500) return;
+    this.lastSig = on ? t : 0;
+    window.VGStore.signal({ type: 'typing', convId: c.id, from: 'agent', on });
+  }
+
+  send = () => {
+    const c = this.cur(); if (!c || c.status !== 'active') return;
+    const text = this.state.draft.trim(), image = this.state.pendingImage;
+    if (!text && !image) return;
+    try { window.VGStore.addMessage(c.id, { from: 'agent', text, image, read: false }); }
+    catch (e) { this.flash('Bộ nhớ trình duyệt đã đầy – không gửi được ảnh'); return; }
+    this.setState({ draft: '', pendingImage: null }); this.typingSig(false);
+  };
+  async readImage(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    if (file.size > 10 * 1024 * 1024) { this.flash('Ảnh vượt quá 10MB'); return; }
+    try { this.setState({ pendingImage: await window.VGStore.imageToDataURL(file) }); } catch (e) {}
+  }
+
+  renderVals() {
+    const s = this.state, st = window.VGStore;
+    const fmt = st ? st.fmtTime : () => '';
+    const all = s.data.convs;
+    const c0 = this.cur();
+    const c = c0 || EMPTY;
+    const color = c0 ? colorOf(c.id) : '#94A3B8';
+    const av = (size, fs, col) => ({ width: size, height: size, borderRadius: '50%', background: col, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fs, flex: 'none' });
+    const counts = { waiting: 0, active: 0, closed: 0 };
+    all.forEach(x => { if (counts[x.status] !== undefined) counts[x.status]++; });
+    const accepted = all.filter(x => x.acceptedAt);
+    const avg = accepted.length ? accepted.reduce((a, x) => a + (x.acceptedAt - x.createdAt), 0) / accepted.length : 0;
+    const q = s.q.trim().toLowerCase(), qd = q.replace(/\s/g, '');
+    const list = all.filter(x => x.status === s.tab && (!q || x.name.toLowerCase().includes(q) || (x.identity || '').replace(/\s/g, '').toLowerCase().includes(qd)))
+      .sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
+    const last = x => [...x.messages].reverse().find(m => m.from !== 'system');
+    const unreadOf = x => x.messages.filter(m => m.from === 'customer' && !m.seen).length;
+    const dot = d => React.createElement('span', { key: d, style: { width: 7, height: 7, borderRadius: '50%', background: '#94A3B8', animation: 'vgDot 1.2s ' + d + 's infinite' } });
+    const waitMin = mins(Date.now() - (c.createdAt || Date.now()));
+    const statusText = { waiting: 'Đang chờ ' + waitMin + ' phút', active: c.customerOnline ? 'Đang trực tuyến' : 'Ngoại tuyến', closed: 'Đã đóng', none: 'Chọn một hội thoại để bắt đầu' }[c.status];
+    const up = fn => c0 && st.updateConv(c0.id, fn);
+    return {
+      stats: [{ label: 'Đang chờ', value: counts.waiting }, { label: 'Đang xử lý', value: counts.active }, { label: 'TG tiếp nhận TB', value: avg ? secs(avg) : '—' }],
+      showStats: s.mid,
+      availLabel: s.available ? 'Sẵn sàng' : 'Tạm vắng',
+      availStyle: { font: 'inherit', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap', background: s.available ? '#ECFDF5' : '#FFFBEB', color: s.available ? '#065F46' : '#92400E', border: '1px solid ' + (s.available ? 'rgba(167,243,208,.8)' : '#FDE68A') },
+      availDot: { width: 9, height: 9, borderRadius: '50%', background: s.available ? '#10B981' : '#F59E0B', animation: s.available ? 'vgPulse 2s infinite' : 'none' },
+      toggleAvail: () => { this.setState({ available: !s.available }); this.flash(s.available ? 'Đã chuyển sang Tạm vắng' : 'Đã sẵn sàng nhận hội thoại'); },
+      q: s.q, onQ: e => this.setState({ q: e.target.value }),
+      listCount: list.length + ' hội thoại',
+      tabs: [['waiting', 'Đang chờ'], ['active', 'Đang xử lý'], ['closed', 'Đã đóng']].map(([id, label]) => {
+        const on = id === s.tab;
+        return { label, count: counts[id], pick: () => this.setState({ tab: id }),
+          style: { flex: 1, font: 'inherit', fontSize: 12, fontWeight: 600, padding: '7px 4px', border: 'none', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', background: on ? '#fff' : 'transparent', color: on ? '#C8102E' : '#64748B', boxShadow: on ? '0 1px 3px rgba(15,23,42,.08)' : 'none' },
+          badge: { fontSize: 11, marginLeft: 2, color: id === 'waiting' && counts.waiting ? '#C8102E' : '#94A3B8' } };
+      }),
+      convs: list.map(x => { const lm = last(x); return {
+        name: x.name, initials: x.initials, service: x.service, online: !!x.customerOnline, unread: unreadOf(x) || '',
+        time: lm ? fmt(lm.ts) : fmt(x.createdAt),
+        preview: s.typing[x.id] ? 'Đang soạn tin…' : lm ? (lm.from === 'agent' ? 'Bạn: ' : '') + (lm.text || '[Hình ảnh]') : 'Chưa có tin nhắn',
+        waitText: x.status === 'waiting' ? 'Chờ ' + mins(Date.now() - x.createdAt) + ' phút' : '',
+        avatar: av(42, 14, colorOf(x.id)),
+        pick: () => { this.setState({ activeId: x.id, draft: '', pendingImage: null }); if (unreadOf(x)) st.updateConv(x.id, y => y.messages.forEach(m => { if (m.from === 'customer') m.seen = true; })); },
+        style: { display: 'flex', gap: 12, alignItems: 'flex-start', textAlign: 'left', font: 'inherit', width: '100%', padding: 12, borderRadius: 14, cursor: 'pointer', border: '1px solid ' + (x.id === c.id ? 'rgba(200,16,46,.3)' : 'transparent'), background: x.id === c.id ? '#FEF2F2' : 'transparent' } }; }),
+      emptyList: list.length === 0,
+      cur: { name: c.name, initials: c.initials, ticket: c.ticket, service: c.service, tier: c.tier || '', rating: c.rating ? c.rating + '/5 sao' : 'chưa có', statusText, waitText: waitMin + ' phút',
+        isWaiting: c.status === 'waiting', isActive: c.status === 'active', isClosed: c.status === 'closed',
+        avatar: av(40, 14, color), avatarSm: av(28, 10, color), avatarLg: av(52, 17, color),
+        fields: c0 ? [{ k: 'Mã yêu cầu', v: c.ticket }, { k: 'Định danh', v: c.identity || '—' }, { k: 'Số điện thoại', v: c.phone || '—' }, { k: 'Mã VinID', v: c.vinid || '—' }, { k: 'Lĩnh vực', v: c.service }, { k: 'Tài sản / Dịch vụ', v: c.asset || '—' }] : [],
+        history: (c.history && c.history.length) ? c.history : [{ id: '—', date: '', title: 'Chưa có yêu cầu trước đó' }] },
+      messages: c.messages.map(m => ({ id: m.id, image: m.image || '', time: fmt(m.ts),
+        text: m.from === 'system' ? m.text + ' · ' + fmt(m.ts) : (m.text || ''),
+        isSystem: m.from === 'system', isCustomer: m.from === 'customer', isAgent: m.from === 'agent',
+        readText: m.read ? 'Đã đọc' : 'Đã gửi', readStyle: { color: m.read ? '#C8102E' : '#94A3B8', fontWeight: m.read ? 600 : 400 },
+        open: () => this.setState({ lightbox: m.image }),
+        del: () => { up(y => { y.messages = y.messages.filter(z => z.id !== m.id); }); this.flash('Đã xóa tin nhắn'); } })),
+      custTyping: !!(c0 && s.typing[c.id] && c.status !== 'closed'), dots: [0, 0.15, 0.3].map(dot),
+      accept: () => { up(y => { y.status = 'active'; y.acceptedAt = Date.now(); y.agentName = AGENT; this.sys(y, AGENT + ' đã tiếp nhận hỗ trợ'); }); this.setState({ tab: 'active' }); },
+      closeConv: () => { up(y => { y.status = 'closed'; y.closedAt = Date.now(); this.sys(y, 'Tổng đài viên đã đóng hội thoại'); }); this.setState({ tab: 'closed' }); this.flash('Đã đóng hội thoại ' + c.ticket); },
+      reopen: () => { up(y => { y.status = 'active'; this.sys(y, 'Hội thoại được mở lại'); }); this.setState({ tab: 'active' }); },
+      transfer: () => this.flash('Đã gửi yêu cầu chuyển tiếp đến bộ phận ' + c.service),
+      templates: TEMPLATES.map(([label, text]) => ({ label, use: () => this.setState({ draft: text }) })),
+      draft: s.draft, pendingImage: s.pendingImage,
+      onDraft: e => { this.setState({ draft: e.target.value }); this.typingSig(!!e.target.value); },
+      onKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
+      onPaste: e => { const it = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/')); if (it) { e.preventDefault(); this.readImage(it.getAsFile()); } },
+      pickFile: () => this.fileRef.current?.click(),
+      onFile: e => { this.readImage(e.target.files?.[0]); e.target.value = ''; },
+      clearImage: () => this.setState({ pendingImage: null }),
+      send: () => this.send(),
+      scrollRef: this.scrollRef, fileRef: this.fileRef,
+      showInfo: (this.props.showCustomerPanel ?? true) && s.wide,
+      note: c.note || '', onNote: e => { const v = e.target.value; up(y => { y.note = v; }); },
+      toast: s.toast, lightbox: s.lightbox, closeLightbox: () => this.setState({ lightbox: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

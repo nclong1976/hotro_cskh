@@ -1,0 +1,896 @@
+diff --git a/src/components/chat/ChatWidget.jsx b/src/components/chat/ChatWidget.jsx
+index ada0091..6202cad 100644
+--- a/src/components/chat/ChatWidget.jsx
++++ b/src/components/chat/ChatWidget.jsx
+@@ -1,7 +1,10 @@
+ import React, { useState, useRef, useEffect, useCallback } from 'react';
+-import { MessageSquare, X, Send, Loader2, ChevronDown } from 'lucide-react';
++import { MessageSquare, X, Send, Loader2, ChevronDown, ImagePlus } from 'lucide-react';
+ import { useConversationChat } from '@/hooks/useConversationChat';
+ import { useAuth } from '@/lib/AuthContext';
++import { useToast } from '@/components/ui/use-toast';
++import ImageLightbox from '@/components/chat/ImageLightbox';
++import { getImageFileFromClipboard, CHAT_IMAGE_ACCEPT, ChatImageError } from '@/lib/chatImageUtils';
+ 
+ // ─── Avatar helpers ──────────────────────────────────────────────────────────
+ const UserAvatar = () => (
+@@ -30,7 +33,7 @@ const TypingDots = () => (
+ );
+ 
+ // ─── Message Bubble ───────────────────────────────────────────────────────────
+-const MessageBubble = ({ msg, isOwn }) => {
++const MessageBubble = ({ msg, isOwn, onImageClick }) => {
+   const time = msg.created_at
+     ? new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+     : '';
+@@ -39,15 +42,38 @@ const MessageBubble = ({ msg, isOwn }) => {
+     <div className={`flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+       {!isOwn && <AdminAvatar />}
+       <div className={`max-w-[78%] flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+-        <div
+-          className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm ${
+-            isOwn
+-              ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-br-sm'
+-              : 'bg-white/10 text-white rounded-bl-sm border border-white/10'
+-          }`}
+-        >
+-          {msg.message}
+-        </div>
++        {msg.image_url && (
++          <button
++            type="button"
++            onClick={() => onImageClick?.(msg.image_url)}
++            className="relative block mb-1 rounded-2xl overflow-hidden border border-white/10 shadow-sm
++              max-w-[220px] group"
++            title="Bấm để xem ảnh cỡ đầy đủ, sắc nét"
++          >
++            <img
++              src={msg.image_url}
++              alt="Hình ảnh đính kèm"
++              className={`block w-full max-h-[280px] object-cover transition-opacity ${msg._uploading ? 'opacity-60' : 'group-hover:opacity-90'}`}
++              loading="lazy"
++            />
++            {msg._uploading && (
++              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
++                <Loader2 className="w-5 h-5 text-white animate-spin" />
++              </div>
++            )}
++          </button>
++        )}
++        {msg.message && (
++          <div
++            className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm ${
++              isOwn
++                ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-br-sm'
++                : 'bg-white/10 text-white rounded-bl-sm border border-white/10'
++            }`}
++          >
++            {msg.message}
++          </div>
++        )}
+         <span className="text-[10px] text-white/35 mt-1 px-1">{time}</span>
+       </div>
+       {isOwn && <UserAvatar />}
+@@ -62,16 +88,50 @@ const MessageBubble = ({ msg, isOwn }) => {
+  */
+ export default function ChatWidget({ open, onClose }) {
+   const { user } = useAuth();
++  const { toast } = useToast();
+   const [text, setText] = useState('');
+   const [showScrollBtn, setShowScrollBtn] = useState(false);
++  const [lightboxSrc, setLightboxSrc] = useState(null);
+   const messagesEndRef = useRef(null);
+   const scrollAreaRef = useRef(null);
+   const inputRef = useRef(null);
++  const fileInputRef = useRef(null);
+   const typingTimeoutRef = useRef(null);
+ 
+-  const { messages, isLoading, adminIsTyping, send, notifyTyping } =
++  const { messages, isLoading, adminIsTyping, send, sendImage, isSendingImage, notifyTyping } =
+     useConversationChat(user);
+ 
++  // Gửi 1 file ảnh (dùng chung cho nút đính kèm & thao tác dán clipboard)
++  const handleSendImageFile = useCallback(async (file) => {
++    if (!file) return;
++    try {
++      await sendImage(file);
++    } catch (err) {
++      toast({
++        title: 'Không gửi được ảnh',
++        description: err instanceof ChatImageError ? err.message : 'Vui lòng thử lại sau.',
++        variant: 'destructive',
++      });
++    }
++  }, [sendImage, toast]);
++
++  const handlePickImage = useCallback((e) => {
++    const file = e.target.files?.[0];
++    e.target.value = '';
++    if (file) handleSendImageFile(file);
++  }, [handleSendImageFile]);
++
++  // Cho phép dán ảnh chụp màn hình trực tiếp (Ctrl+V / Cmd+V) vào ô nhập tin
++  // nhắn — hệ thống tự nhận diện ảnh trong clipboard và gửi ngay, không cần
++  // lưu file ra máy rồi mới chọn lại.
++  const handlePaste = useCallback((e) => {
++    const file = getImageFileFromClipboard(e.clipboardData);
++    if (file) {
++      e.preventDefault();
++      handleSendImageFile(file);
++    }
++  }, [handleSendImageFile]);
++
+   // Scroll xuống cuối khi có tin mới
+   useEffect(() => {
+     if (open) {
+@@ -189,7 +249,7 @@ export default function ChatWidget({ open, onClose }) {
+           {/* Message list */}
+           {messages.map((msg) => {
+             const isOwn = msg.sender_role === 'user';
+-            return <MessageBubble key={msg.id} msg={msg} isOwn={isOwn} />;
++            return <MessageBubble key={msg.id} msg={msg} isOwn={isOwn} onImageClick={setLightboxSrc} />;
+           })}
+ 
+           {/* Admin typing indicator */}
+@@ -222,14 +282,34 @@ export default function ChatWidget({ open, onClose }) {
+         <div className="px-3 py-3 border-t border-white/10 shrink-0 bg-[#0f1225]/50 backdrop-blur-sm">
+           <div className="flex items-end gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2
+             focus-within:border-amber-400/50 focus-within:ring-1 focus-within:ring-amber-400/20 transition-all">
++            <input
++              ref={fileInputRef}
++              type="file"
++              accept={CHAT_IMAGE_ACCEPT}
++              className="hidden"
++              onChange={handlePickImage}
++            />
++            <button
++              type="button"
++              onClick={() => fileInputRef.current?.click()}
++              disabled={isSendingImage}
++              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mb-0.5
++                text-white/50 hover:text-amber-400 hover:bg-white/5 transition-colors disabled:opacity-40"
++              title="Gửi hình ảnh"
++            >
++              {isSendingImage
++                ? <Loader2 className="w-4 h-4 animate-spin" />
++                : <ImagePlus className="w-4 h-4" />}
++            </button>
+             <textarea
+               ref={inputRef}
+               id="chat-widget-input"
+               value={text}
+               onChange={handleInputChange}
+               onKeyDown={handleKeyDown}
++              onPaste={handlePaste}
+               rows={1}
+-              placeholder="Nhập tin nhắn... (Enter để gửi)"
++              placeholder="Nhập tin nhắn hoặc dán ảnh (Ctrl+V)..."
+               className="flex-1 bg-transparent text-white text-sm placeholder:text-white/35
+                 resize-none outline-none min-h-[24px] max-h-24 leading-6"
+               style={{ fieldSizing: 'content' }}
+@@ -247,10 +327,12 @@ export default function ChatWidget({ open, onClose }) {
+             </button>
+           </div>
+           <p className="text-[10px] text-white/25 text-center mt-1.5">
+-            Shift+Enter để xuống dòng
++            Shift+Enter để xuống dòng · Dán (Ctrl+V) hoặc bấm 🖼️ để gửi ảnh
+           </p>
+         </div>
+       </div>
++
++      <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+     </>
+   );
+ }
+diff --git a/src/components/chat/ImageLightbox.jsx b/src/components/chat/ImageLightbox.jsx
+new file mode 100644
+index 0000000..f3978e1
+--- /dev/null
++++ b/src/components/chat/ImageLightbox.jsx
+@@ -0,0 +1,66 @@
++import React, { useEffect } from 'react';
++import { X, Download } from 'lucide-react';
++
++/**
++ * ImageLightbox — Xem ảnh đính kèm chat ở kích thước TO và SẮC NÉT (ảnh gốc,
++ * không bị nén/scale bởi bong bóng chat nhỏ). Đóng bằng nút X, click nền
++ * đen, hoặc phím Esc.
++ */
++export default function ImageLightbox({ src, onClose }) {
++  useEffect(() => {
++    if (!src) return;
++    const onKeyDown = (e) => {
++      if (e.key === 'Escape') onClose?.();
++    };
++    window.addEventListener('keydown', onKeyDown);
++    // Khoá scroll nền trong lúc xem ảnh toàn màn hình
++    const prevOverflow = document.body.style.overflow;
++    document.body.style.overflow = 'hidden';
++    return () => {
++      window.removeEventListener('keydown', onKeyDown);
++      document.body.style.overflow = prevOverflow;
++    };
++  }, [src, onClose]);
++
++  if (!src) return null;
++
++  return (
++    <div
++      className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
++      onClick={onClose}
++      role="dialog"
++      aria-modal="true"
++    >
++      <button
++        onClick={onClose}
++        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20
++          flex items-center justify-center text-white transition-colors z-10"
++        aria-label="Đóng"
++      >
++        <X className="w-5 h-5" />
++      </button>
++
++      <a
++        href={src}
++        download
++        target="_blank"
++        rel="noopener noreferrer"
++        onClick={(e) => e.stopPropagation()}
++        className="absolute top-4 right-16 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20
++          flex items-center justify-center text-white transition-colors z-10"
++        aria-label="Tải ảnh gốc"
++        title="Tải ảnh gốc"
++      >
++        <Download className="w-4.5 h-4.5" />
++      </a>
++
++      <img
++        src={src}
++        alt="Ảnh đính kèm — xem đầy đủ"
++        onClick={(e) => e.stopPropagation()}
++        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none"
++        draggable={false}
++      />
++    </div>
++  );
++}
+diff --git a/src/hooks/useAdminChat.js b/src/hooks/useAdminChat.js
+index 959ed9b..ce53d32 100644
+--- a/src/hooks/useAdminChat.js
++++ b/src/hooks/useAdminChat.js
+@@ -7,9 +7,11 @@ import {
+   spSubscribeConversations,
+   spSubscribeConversationMessages,
+   spBroadcastTyping,
++  spUploadChatImage,
+ } from '@/lib/supabaseService';
+ import { isSupabaseConfigured } from '@/lib/supabase';
+ import { emitSocketEvent } from '@/lib/socket';
++import { prepareChatImage } from '@/lib/chatImageUtils';
+ 
+ /**
+  * useAdminChat — Hook cho phía Admin (Dashboard 2 cột).
+@@ -33,6 +35,7 @@ export function useAdminChat() {
+   const [userIsTyping, setUserIsTyping] = useState(false);
+   const [isLoadingConvs, setIsLoadingConvs] = useState(false);
+   const [isLoadingMsgs, setIsLoadingMsgs] = useState(false);
++  const [isSendingImage, setIsSendingImage] = useState(false);
+ 
+   const userTypingTimer = useRef(null);
+   const unsubMsgsRef = useRef(null);
+@@ -203,6 +206,77 @@ export function useAdminChat() {
+     });
+   }, [conversations]);
+ 
++  // ─── Admin gửi ảnh đính kèm cho khách hàng ────────────────────
++  const sendReplyImage = useCallback(async (file, adminUser) => {
++    const convId = activeConvIdRef.current;
++    if (!file || !convId || !adminUser) return;
++
++    const conv = conversations.find((c) => c.id === convId);
++    if (!conv) return;
++
++    const adminRole = adminUser.role || 'admin';
++    const adminName = adminUser.full_name || adminUser.account || 'Admin';
++    const targetUserId = conv.user_id;
++    const msgId = 'msg_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
++
++    setIsSendingImage(true);
++    try {
++      const { file: preparedFile, width, height } = await prepareChatImage(file);
++      const localPreviewUrl = URL.createObjectURL(preparedFile);
++
++      const optimistic = {
++        id: msgId,
++        user_id: targetUserId,
++        username: adminName,
++        message: '',
++        image_url: localPreviewUrl,
++        image_width: width,
++        image_height: height,
++        sender_role: adminRole,
++        conversation_id: convId,
++        read_by_admin: true,
++        read_by_user: false,
++        created_at: new Date().toISOString(),
++        _uploading: true,
++      };
++      setMessages((prev) => [...prev, optimistic]);
++
++      const imageUrl = await spUploadChatImage(preparedFile);
++      if (!imageUrl) throw new Error('upload_failed');
++
++      spBroadcastTyping.send(convId, adminUser.id, adminRole, false);
++
++      const saved = await spSendChatMessageV2({
++        id: msgId,
++        userId: targetUserId,
++        username: adminName,
++        message: '',
++        senderRole: adminRole,
++        conversationId: convId,
++        imageUrl,
++        imageWidth: width,
++        imageHeight: height,
++      });
++
++      setMessages((prev) => prev.map((m) => (m.id === msgId ? (saved || { ...m, image_url: imageUrl, _uploading: false }) : m)));
++      URL.revokeObjectURL(localPreviewUrl);
++
++      emitSocketEvent('chat:send_message', {
++        ...(saved || optimistic),
++        conversationId: convId,
++        userId: targetUserId,
++      });
++
++      return true;
++    } catch (err) {
++      console.error('[useAdminChat] sendReplyImage error:', err);
++      setMessages((prev) => prev.filter((m) => m.id !== msgId));
++      throw err;
++    } finally {
++      setIsSendingImage(false);
++    }
++  }, [conversations]);
++
+   // ─── Admin đang gõ → thông báo cho user ─────────────────────
+   const adminTypingTimer = useRef(null);
+   const notifyTyping = useCallback((isTyping, adminUser) => {
+@@ -233,6 +307,8 @@ export function useAdminChat() {
+     isLoadingConvs,
+     isLoadingMsgs,
+     sendReply,
++    sendReplyImage,
++    isSendingImage,
+     notifyTyping,
+     totalUnread,
+     refreshConversations: loadConversations,
+diff --git a/src/hooks/useConversationChat.js b/src/hooks/useConversationChat.js
+index d1a759a..edb3c11 100644
+--- a/src/hooks/useConversationChat.js
++++ b/src/hooks/useConversationChat.js
+@@ -6,9 +6,11 @@ import {
+   spMarkConversationRead,
+   spSubscribeConversationMessages,
+   spBroadcastTyping,
++  spUploadChatImage,
+ } from '@/lib/supabaseService';
+ import { isSupabaseConfigured } from '@/lib/supabase';
+ import { emitSocketEvent } from '@/lib/socket';
++import { prepareChatImage } from '@/lib/chatImageUtils';
+ 
+ /**
+  * useConversationChat — Hook cho phía User (Chat Widget).
+@@ -29,6 +31,7 @@ export function useConversationChat(user) {
+   const [messages, setMessages] = useState([]);
+   const [isLoading, setIsLoading] = useState(false);
+   const [adminIsTyping, setAdminIsTyping] = useState(false);
++  const [isSendingImage, setIsSendingImage] = useState(false);
+ 
+   const adminTypingTimer = useRef(null);
+   const convIdRef = useRef(null);
+@@ -154,6 +157,74 @@ export function useConversationChat(user) {
+     });
+   }, [userId, userName]);
+ 
++  // Gửi ảnh đính kèm (từ nút chọn ảnh hoặc dán Ctrl+V/Cmd+V vào ô nhập).
++  // Ảnh được xử lý (chuẩn hoá xoay EXIF, chỉ nén khi thực sự quá khổ để giữ
++  // độ nét) rồi tải lên Supabase Storage, sau đó lưu URL vào tin nhắn —
++  // đồng bộ real-time sang admin và mọi thiết bị khác của người dùng.
++  const sendImage = useCallback(async (file, caption = '') => {
++    if (!file || !userId) return;
++    const convId = convIdRef.current;
++
++    setIsSendingImage(true);
++    const msgId = 'msg_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
++
++    try {
++      const { file: preparedFile, width, height } = await prepareChatImage(file);
++
++      // Optimistic preview: hiện ảnh ngay bằng blob local trong lúc chờ upload.
++      const localPreviewUrl = URL.createObjectURL(preparedFile);
++      const optimistic = {
++        id: msgId,
++        user_id: userId,
++        username: userName,
++        message: caption.trim(),
++        image_url: localPreviewUrl,
++        image_width: width,
++        image_height: height,
++        sender_role: 'user',
++        conversation_id: convId,
++        read_by_admin: false,
++        read_by_user: true,
++        created_at: new Date().toISOString(),
++        _uploading: true,
++      };
++      setMessages((prev) => [...prev, optimistic]);
++
++      const imageUrl = await spUploadChatImage(preparedFile);
++      if (!imageUrl) throw new Error('upload_failed');
++
++      const saved = await spSendChatMessageV2({
++        id: msgId,
++        userId,
++        username: userName,
++        message: caption.trim(),
++        senderRole: 'user',
++        conversationId: convId,
++        imageUrl,
++        imageWidth: width,
++        imageHeight: height,
++      });
++
++      setMessages((prev) => prev.map((m) => (m.id === msgId ? (saved || { ...m, image_url: imageUrl, _uploading: false }) : m)));
++      URL.revokeObjectURL(localPreviewUrl);
++
++      emitSocketEvent('chat:send_message', {
++        ...(saved || optimistic),
++        conversationId: convId,
++        userId,
++      });
++
++      return true;
++    } catch (err) {
++      console.error('[useConversationChat] sendImage error:', err);
++      // Gửi thất bại — bỏ tin nhắn optimistic khỏi danh sách
++      setMessages((prev) => prev.filter((m) => m.id !== msgId));
++      throw err;
++    } finally {
++      setIsSendingImage(false);
++    }
++  }, [userId, userName]);
++
+   // Thông báo user đang gõ cho admin
+   const userTypingTimer = useRef(null);
+   const notifyTyping = useCallback((isTyping) => {
+@@ -179,6 +250,8 @@ export function useConversationChat(user) {
+     adminIsTyping,
+     unreadUser,
+     send,
++    sendImage,
++    isSendingImage,
+     notifyTyping,
+   };
+ }
+diff --git a/src/lib/chatImageUtils.js b/src/lib/chatImageUtils.js
+new file mode 100644
+index 0000000..124a932
+--- /dev/null
++++ b/src/lib/chatImageUtils.js
+@@ -0,0 +1,146 @@
++// ─── chatImageUtils ───────────────────────────────────────────────────────
++// Tiện ích xử lý ảnh cho khung Hỗ Trợ Trực Tuyến: nhận ảnh từ input file
++// hoặc từ thao tác dán (Ctrl+V / Cmd+V), tự động chuẩn hoá chiều xoay
++// (EXIF), và chỉ nén lại khi ảnh thực sự quá khổ — nếu không, giữ nguyên
++// file gốc để hình luôn hiển thị TO và SẮC NÉT khi người dùng bấm xem
++// toàn màn hình (không bị mờ do nén lại nhiều lần).
++
++// Kích thước cạnh dài tối đa sau xử lý — đủ lớn để xem rõ chi tiết (vd
++// biên lai chuyển khoản, ảnh chụp lỗi game) nhưng không quá nặng khi tải lên.
++const MAX_DIMENSION = 2560;
++
++// Ảnh gốc nhỏ hơn ngưỡng này thì giữ nguyên, không xử lý lại (tránh nén
++// thêm một lần nữa làm giảm độ nét so với bản gốc người dùng gửi).
++const SKIP_REPROCESS_BYTES = 6 * 1024 * 1024; // 6MB
++
++// Giới hạn dung lượng file gốc được chấp nhận.
++export const MAX_ORIGINAL_BYTES = 20 * 1024 * 1024; // 20MB
++
++export const CHAT_IMAGE_ACCEPT = "image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif";
++
++export class ChatImageError extends Error {}
++
++/** Đọc kích thước + dữ liệu ảnh bằng <img>, tự áp dụng xoay theo EXIF của trình duyệt. */
++function loadImageElement(objectUrl) {
++  return new Promise((resolve, reject) => {
++    const img = new window.Image();
++    img.onload = () => resolve(img);
++    img.onerror = () => reject(new ChatImageError("Không thể đọc được tệp ảnh này."));
++    img.src = objectUrl;
++  });
++}
++
++async function loadBitmap(file) {
++  if (typeof window !== "undefined" && "createImageBitmap" in window) {
++    try {
++      // imageOrientation: 'from-image' tự xoay đúng chiều theo EXIF, tránh
++      // ảnh chụp từ điện thoại bị nằm ngang khi hiển thị trong chat.
++      return await createImageBitmap(file, { imageOrientation: "from-image" });
++    } catch {
++      // rơi xuống fallback bên dưới nếu trình duyệt/định dạng không hỗ trợ
++    }
++  }
++  const objectUrl = URL.createObjectURL(file);
++  try {
++    const img = await loadImageElement(objectUrl);
++    return img;
++  } finally {
++    URL.revokeObjectURL(objectUrl);
++  }
++}
++
++function getDims(source) {
++  return {
++    width: source.naturalWidth || source.width,
++    height: source.naturalHeight || source.height,
++  };
++}
++
++/**
++ * Chuẩn bị 1 file ảnh để gửi trong chat hỗ trợ trực tuyến.
++ * - Ảnh vượt quá MAX_DIMENSION: resize về đúng cạnh dài tối đa, giữ chất
++ *   lượng cao (không làm ảnh bị vỡ/mờ khi nhìn to trên Lightbox).
++ * - Ảnh vừa vặn & không quá nặng: giữ nguyên file gốc — "sắc nét" tuyệt đối.
++ * Trả về { file, width, height } sẵn sàng để upload lên Supabase Storage.
++ */
++export async function prepareChatImage(file) {
++  if (!file || !file.type || !file.type.startsWith("image/")) {
++    throw new ChatImageError("Chỉ có thể gửi tệp hình ảnh (PNG, JPG, WEBP, GIF).");
++  }
++  if (file.size > MAX_ORIGINAL_BYTES) {
++    throw new ChatImageError("Ảnh quá lớn (tối đa 20MB). Vui lòng chọn ảnh nhỏ hơn.");
++  }
++
++  const source = await loadBitmap(file);
++  const { width, height } = getDims(source);
++  if (source.close) source.close(); // giải phóng ImageBitmap nếu có
++
++  const longEdge = Math.max(width, height);
++  const needsResize = longEdge > MAX_DIMENSION;
++  const canKeepOriginal = !needsResize && file.size <= SKIP_REPROCESS_BYTES;
++
++  if (canKeepOriginal) {
++    return { file, width, height };
++  }
++
++  // Vẽ lại qua canvas ở độ phân giải tối ưu, dùng smoothing chất lượng cao
++  // để ảnh "giải nén" ra vẫn to và sắc nét thay vì bị răng cưa/mờ.
++  const scale = needsResize ? MAX_DIMENSION / longEdge : 1;
++  const targetW = Math.max(1, Math.round(width * scale));
++  const targetH = Math.max(1, Math.round(height * scale));
++
++  const canvas = document.createElement("canvas");
++  canvas.width = targetW;
++  canvas.height = targetH;
++  const ctx = canvas.getContext("2d");
++  ctx.imageSmoothingEnabled = true;
++  ctx.imageSmoothingQuality = "high";
++
++  const drawSource = await loadBitmap(file);
++  ctx.drawImage(drawSource, 0, 0, targetW, targetH);
++  if (drawSource.close) drawSource.close();
++
++  // Giữ định dạng PNG cho ảnh chụp màn hình (nhiều chữ/đường thẳng cần nét
++  // căng, PNG không nén mất dữ liệu); ảnh JPEG/khác xuất lại chất lượng cao.
++  const isPng = file.type === "image/png";
++  const outputType = isPng ? "image/png" : "image/jpeg";
++  const quality = isPng ? undefined : 0.95;
++
++  const blob = await new Promise((resolve, reject) => {
++    canvas.toBlob(
++      (b) => (b ? resolve(b) : reject(new ChatImageError("Không thể xử lý ảnh."))),
++      outputType,
++      quality
++    );
++  });
++
++  const ext = isPng ? "png" : "jpg";
++  const outFile = new File([blob], renameForOutput(file.name, ext), { type: outputType });
++
++  return { file: outFile, width: targetW, height: targetH };
++}
++
++function renameForOutput(originalName, ext) {
++  const base = (originalName || "image").replace(/\.[a-z0-9]+$/i, "");
++  return `${base}.${ext}`;
++}
++
++/**
++ * Lấy file ảnh đầu tiên từ 1 sự kiện paste (Ctrl+V / Cmd+V), nếu có.
++ * Trả về null nếu clipboard không chứa ảnh (vd người dùng dán chữ thường).
++ */
++export function getImageFileFromClipboard(clipboardData) {
++  if (!clipboardData || !clipboardData.items) return null;
++  for (const item of clipboardData.items) {
++    if (item.kind === "file" && item.type && item.type.startsWith("image/")) {
++      const file = item.getAsFile();
++      if (file) {
++        // Ảnh dán từ clipboard thường không có tên — đặt tên có timestamp
++        // để dễ phân biệt khi xử lý phía server/lưu trữ.
++        const ext = (item.type.split("/")[1] || "png").replace("jpeg", "jpg");
++        return new File([file], `paste_${Date.now()}.${ext}`, { type: item.type });
++      }
++    }
++  }
++  return null;
++}
+diff --git a/src/lib/supabaseService.js b/src/lib/supabaseService.js
+index 731c198..9ad2d09 100644
+--- a/src/lib/supabaseService.js
++++ b/src/lib/supabaseService.js
+@@ -69,6 +69,13 @@ export const spUploadFile = async (file, folder = 'misc') => {
+   return data?.publicUrl || null;
+ };
+ 
++/**
++ * Tải 1 ảnh đính kèm khung chat hỗ trợ trực tuyến lên Storage (thư mục "chat/").
++ * Dùng chung `spUploadFile` — tách riêng hàm này để nơi gọi (widget chat) không
++ * phải nhớ tên thư mục, và dễ đổi chiến lược lưu trữ ảnh chat sau này nếu cần.
++ */
++export const spUploadChatImage = (file) => spUploadFile(file, 'chat');
++
+ /**
+  * Register user in Supabase CSDL (users_profile table)
+  */
+@@ -790,6 +797,12 @@ export const spSendChatMessageV2 = async (msg) => {
+     sender_role: msg.senderRole || 'user',
+     is_secret: !!msg.isSecret,
+     conversation_id: msg.conversationId || null,
++    // Ảnh đính kèm (hỗ trợ trực tuyến cho phép gửi hình ảnh / dán clipboard).
++    // image_url trỏ tới file gốc trên Supabase Storage — luôn hiển thị đúng
++    // kích thước & độ nét gốc, không đi qua nén base64 trong DB.
++    image_url: msg.imageUrl || null,
++    image_width: msg.imageWidth || null,
++    image_height: msg.imageHeight || null,
+     read_by_admin: msg.senderRole === 'admin' || msg.senderRole === 'super_admin',
+     read_by_user: msg.senderRole === 'user',
+     created_at: new Date().toISOString(),
+diff --git a/src/pages/admin/modules/Chat.jsx b/src/pages/admin/modules/Chat.jsx
+index 87adac2..b4cd7a6 100644
+--- a/src/pages/admin/modules/Chat.jsx
++++ b/src/pages/admin/modules/Chat.jsx
+@@ -1,13 +1,15 @@
+ import React, { useState, useRef, useEffect, useCallback } from 'react';
+ import {
+   Send, Search, Ghost, Trash2, MessageSquare,
+-  Loader2, RefreshCw, CheckCheck, Clock, ChevronDown
++  Loader2, RefreshCw, CheckCheck, Clock, ChevronDown, ImagePlus
+ } from 'lucide-react';
+ import { Panel, inputCls } from '../ui';
+ import { useAuth } from '@/lib/AuthContext';
+ import { useAdminChat } from '@/hooks/useAdminChat';
+ import { deleteChatMessage } from '@/lib/localChat';
+ import { useToast } from '@/components/ui/use-toast';
++import ImageLightbox from '@/components/chat/ImageLightbox';
++import { getImageFileFromClipboard, CHAT_IMAGE_ACCEPT, ChatImageError } from '@/lib/chatImageUtils';
+ 
+ // ─── Avatar ──────────────────────────────────────────────────────────────────
+ const Avatar = ({ name, role }) => {
+@@ -37,7 +39,7 @@ const TypingDots = ({ label = 'đang gõ...' }) => (
+ );
+ 
+ // ─── Message bubble ───────────────────────────────────────────────────────────
+-const MessageBubble = ({ msg, isFromAdmin, onDelete, canDelete }) => {
++const MessageBubble = ({ msg, isFromAdmin, onDelete, canDelete, onImageClick }) => {
+   const time = msg.created_at
+     ? new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+     : '';
+@@ -60,14 +62,37 @@ const MessageBubble = ({ msg, isFromAdmin, onDelete, canDelete }) => {
+       <Avatar name={msg.username} role={msg.sender_role} />
+ 
+       <div className={`max-w-[72%] flex flex-col ${isFromAdmin ? 'items-end' : 'items-start'}`}>
+-        <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm
+-          ${isFromAdmin
+-            ? 'bg-gradient-to-br from-[#7033ff] to-[#4b00ff] text-white rounded-br-sm'
+-            : 'bg-white/10 text-white rounded-bl-sm border border-white/10'
+-          }`}
+-        >
+-          {msg.message}
+-        </div>
++        {msg.image_url && (
++          <button
++            type="button"
++            onClick={() => onImageClick?.(msg.image_url)}
++            className="relative block mb-1 rounded-2xl overflow-hidden border border-white/10 shadow-sm
++              max-w-[240px] group/img"
++            title="Bấm để xem ảnh cỡ đầy đủ, sắc nét"
++          >
++            <img
++              src={msg.image_url}
++              alt="Hình ảnh đính kèm"
++              className={`block w-full max-h-[300px] object-cover transition-opacity ${msg._uploading ? 'opacity-60' : 'group-hover/img:opacity-90'}`}
++              loading="lazy"
++            />
++            {msg._uploading && (
++              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
++                <Loader2 className="w-5 h-5 text-white animate-spin" />
++              </div>
++            )}
++          </button>
++        )}
++        {msg.message && (
++          <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm
++            ${isFromAdmin
++              ? 'bg-gradient-to-br from-[#7033ff] to-[#4b00ff] text-white rounded-br-sm'
++              : 'bg-white/10 text-white rounded-bl-sm border border-white/10'
++            }`}
++          >
++            {msg.message}
++          </div>
++        )}
+         <div className={`flex items-center gap-1 mt-0.5 px-1 ${isFromAdmin ? 'flex-row-reverse' : ''}`}>
+           <span className="text-[10px] text-white/35">{time}</span>
+           {isFromAdmin && (
+@@ -153,6 +178,8 @@ export default function Chat() {
+     isLoadingConvs,
+     isLoadingMsgs,
+     sendReply,
++    sendReplyImage,
++    isSendingImage,
+     notifyTyping,
+     totalUnread,
+     refreshConversations,
+@@ -161,11 +188,41 @@ export default function Chat() {
+   const [text, setText] = useState('');
+   const [q, setQ] = useState('');
+   const [showScrollBtn, setShowScrollBtn] = useState(false);
++  const [lightboxSrc, setLightboxSrc] = useState(null);
+   const messagesEndRef = useRef(null);
+   const scrollAreaRef = useRef(null);
+   const inputRef = useRef(null);
++  const fileInputRef = useRef(null);
+   const typingTimeoutRef = useRef(null);
+ 
++  // Gửi ảnh đính kèm cho khách hàng (dùng chung cho nút đính kèm & dán clipboard)
++  const handleSendImageFile = useCallback(async (file) => {
++    if (!file || !activeConvId) return;
++    try {
++      await sendReplyImage(file, currentUser);
++    } catch (err) {
++      toast({
++        title: 'Không gửi được ảnh',
++        description: err instanceof ChatImageError ? err.message : 'Vui lòng thử lại sau.',
++        variant: 'destructive',
++      });
++    }
++  }, [sendReplyImage, currentUser, activeConvId, toast]);
++
++  const handlePickImage = useCallback((e) => {
++    const file = e.target.files?.[0];
++    e.target.value = '';
++    if (file) handleSendImageFile(file);
++  }, [handleSendImageFile]);
++
++  const handlePaste = useCallback((e) => {
++    const file = getImageFileFromClipboard(e.clipboardData);
++    if (file) {
++      e.preventDefault();
++      handleSendImageFile(file);
++    }
++  }, [handleSendImageFile]);
++
+   // Scroll cuối khi có tin mới
+   useEffect(() => {
+     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+@@ -376,6 +433,7 @@ export default function Chat() {
+                       isFromAdmin={isFromAdmin}
+                       onDelete={handleDeleteMessage}
+                       canDelete={isSuperAdmin}
++                      onImageClick={setLightboxSrc}
+                     />
+                   );
+                 })}
+@@ -425,14 +483,34 @@ export default function Chat() {
+               <div className="px-3 py-3 border-t border-white/10 shrink-0">
+                 <div className="flex items-end gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2
+                   focus-within:border-[#ffab40]/50 focus-within:ring-1 focus-within:ring-[#ffab40]/20 transition-all">
++                  <input
++                    ref={fileInputRef}
++                    type="file"
++                    accept={CHAT_IMAGE_ACCEPT}
++                    className="hidden"
++                    onChange={handlePickImage}
++                  />
++                  <button
++                    type="button"
++                    onClick={() => fileInputRef.current?.click()}
++                    disabled={isSendingImage}
++                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mb-0.5
++                      text-white/50 hover:text-[#ffab40] hover:bg-white/5 transition-colors disabled:opacity-40"
++                    title="Gửi hình ảnh cho khách hàng"
++                  >
++                    {isSendingImage
++                      ? <Loader2 size={16} className="animate-spin" />
++                      : <ImagePlus size={16} />}
++                  </button>
+                   <textarea
+                     ref={inputRef}
+                     id="admin-chat-input"
+                     value={text}
+                     onChange={handleInputChange}
+                     onKeyDown={handleKeyDown}
++                    onPaste={handlePaste}
+                     rows={1}
+-                    placeholder="Nhập phản hồi (Enter để gửi, Shift+Enter xuống dòng)..."
++                    placeholder="Nhập phản hồi hoặc dán ảnh (Ctrl+V)..."
+                     className="flex-1 bg-transparent text-white text-sm placeholder:text-white/35
+                       resize-none outline-none min-h-[24px] max-h-24 leading-6"
+                     style={{ fieldSizing: 'content' }}
+@@ -454,6 +532,8 @@ export default function Chat() {
+           )}
+         </Panel>
+       </div>
++
++      <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+     </div>
+   );
+ }
+\ No newline at end of file
+diff --git a/supabase/chat_images_migration.sql b/supabase/chat_images_migration.sql
+new file mode 100644
+index 0000000..c0adb6d
+--- /dev/null
++++ b/supabase/chat_images_migration.sql
+@@ -0,0 +1,51 @@
++-- ====================================================================
++-- LIVE CHAT CSKH — MIGRATION v3: HỖ TRỢ GỬI HÌNH ẢNH
++-- Chạy file này trong Supabase SQL Editor sau khi đã chạy schema.sql
++-- và chat_migration.sql (v2).
++--
++-- Cho phép người chơi (và Admin) gửi hình ảnh trong khung chat hỗ trợ
++-- trực tuyến. Ảnh được tải lên Supabase Storage (bucket "app-assets",
++-- thư mục "chat/") và chỉ lưu URL công khai vào bảng chat_messages —
++-- không lưu base64 trong DB để tránh phình dung lượng và để ảnh luôn
++-- đồng bộ real-time, đúng kích thước gốc, sắc nét trên mọi thiết bị.
++-- ====================================================================
++
++-- 1. THÊM CỘT LƯU ẢNH ĐÍNH KÈM (backward-compatible — nullable)
++ALTER TABLE public.chat_messages
++    ADD COLUMN IF NOT EXISTS image_url TEXT,
++    ADD COLUMN IF NOT EXISTS image_width INTEGER,
++    ADD COLUMN IF NOT EXISTS image_height INTEGER;
++
++-- Cho phép message rỗng khi tin nhắn chỉ có ảnh (không có chữ đi kèm)
++ALTER TABLE public.chat_messages ALTER COLUMN message SET DEFAULT '';
++
++-- 2. INDEX phụ trợ lọc nhanh các tin nhắn có ảnh (vd thống kê, kiểm duyệt)
++CREATE INDEX IF NOT EXISTS idx_chat_messages_has_image
++    ON public.chat_messages ((image_url IS NOT NULL))
++    WHERE image_url IS NOT NULL;
++
++-- 3. LƯU Ý VỀ SUPABASE STORAGE
++-- Bucket "app-assets" đã được dùng sẵn cho banner (folder "banners/").
++-- Ảnh chat sẽ được tải lên cùng bucket này ở thư mục "chat/".
++-- Đảm bảo bucket "app-assets" đang ở chế độ PUBLIC (Storage → app-assets →
++-- Settings → Public bucket = ON) để getPublicUrl() trả về link xem được
++-- trực tiếp trên trình duyệt, không cần ký token.
++--
++-- Nếu bucket chưa tồn tại, tạo bằng lệnh sau (chạy 1 lần, bỏ qua nếu đã có):
++--
++--   insert into storage.buckets (id, name, public)
++--   values ('app-assets', 'app-assets', true)
++--   on conflict (id) do nothing;
++--
++-- Và cho phép public đọc + người dùng đã đăng nhập (hoặc ẩn danh, tuỳ app)
++-- tải ảnh lên thư mục chat/:
++--
++--   DROP POLICY IF EXISTS "Public read app-assets" ON storage.objects;
++--   CREATE POLICY "Public read app-assets"
++--     ON storage.objects FOR SELECT
++--     USING (bucket_id = 'app-assets');
++--
++--   DROP POLICY IF EXISTS "Public upload app-assets" ON storage.objects;
++--   CREATE POLICY "Public upload app-assets"
++--     ON storage.objects FOR INSERT
++--     WITH CHECK (bucket_id = 'app-assets');
