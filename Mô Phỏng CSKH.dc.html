@@ -16,16 +16,26 @@ body{margin:0;font-family:'Be Vietnam Pro',sans-serif;background:#EEF0F4;color:#
 a{color:#C8102E;text-decoration:none}a:hover{color:#a30c24}
 @keyframes vgPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.15)}}
 button:focus-visible{outline:2px solid #C8102E;outline-offset:2px}
+.vg-app{height:100vh;height:100dvh}
+@media (max-width:899px){
+  .vg-top{padding:10px 12px!important;gap:10px!important}
+  .vg-title{font-size:16px!important}
+  .vg-actions{width:100%}
+  .vg-step{order:3;max-width:none!important;flex:1 1 100%;min-width:0;box-sizing:border-box}
+  .vg-step>span:last-child{min-width:0}
+  .vg-grid{grid-template-columns:minmax(0,1fr)!important;padding:10px!important;gap:10px!important}
+  .vg-route{display:none!important}
+}
 </style>
 </helmet>
-<div style="height:100vh;display:flex;flex-direction:column;overflow:hidden">
-  <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px;background:#fff;border-bottom:1px solid #E2E8F0">
+<div class="vg-app" style="display:flex;flex-direction:column;overflow:hidden">
+  <div class="vg-top" style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px;background:#fff;border-bottom:1px solid #E2E8F0">
     <div style="display:flex;flex-direction:column;gap:2px">
       <span style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;color:#C8102E">Mô phỏng thực tế</span>
-      <span style="font-size:18px;font-weight:700;color:#0F172A">Khách hàng ↔ Tổng đài viên</span>
+      <span class="vg-title" style="font-size:18px;font-weight:700;color:#0F172A">Khách hàng ↔ Tổng đài viên</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:999px;padding:6px 14px;max-width:420px">
+    <div class="vg-actions" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="vg-step" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:999px;padding:6px 14px;max-width:420px">
         <span style="{{ stepDot }}"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ stepText }}</span>
       </span>
       <button onClick="{{ run }}" style="{{ runStyle }}">
@@ -35,20 +45,27 @@ button:focus-visible{outline:2px solid #C8102E;outline-offset:2px}
     </div>
   </div>
 
-  <div style="flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);gap:14px;padding:14px">
-    <div style="display:flex;flex-direction:column;gap:8px;min-height:0">
+  <sc-if value="{{ narrow }}">
+    <div style="flex:none;display:flex;gap:4px;background:#E2E8F0;border-radius:12px;padding:4px;margin:10px 10px 0">
+      <sc-for list="{{ panes }}" as="p" hint-placeholder-count="2">
+        <button onClick="{{ p.pick }}" style="{{ p.style }}">{{ p.label }}</button>
+      </sc-for>
+    </div>
+  </sc-if>
+  <div class="vg-grid" style="flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);gap:14px;padding:14px">
+    <div style="{{ custPane }}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px">
         <span style="font-size:13px;font-weight:700;color:#0F172A;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#C8102E"></span>Màn hình khách hàng</span>
-        <span style="font-size:12px;color:#64748B">Đăng nhập → Nhắn tin</span>
+        <span class="vg-route" style="font-size:12px;color:#64748B">Đăng nhập → Nhắn tin</span>
       </div>
       <div style="flex:1;min-height:0;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0;background:#fff;box-shadow:0 10px 30px -10px rgba(15,23,42,.15)">
         <iframe ref="{{ custRef }}" src="./Đăng Nhập CSKH.dc.html" title="Khách hàng" style="width:100%;height:100%;border:0;display:block"></iframe>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:8px;min-height:0">
+    <div style="{{ adminPane }}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px">
         <span style="font-size:13px;font-weight:700;color:#0F172A;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#0F172A"></span>Trang quản trị CSKH</span>
-        <span style="font-size:12px;color:#64748B">Nhận hỗ trợ → Trả lời</span>
+        <span class="vg-route" style="font-size:12px;color:#64748B">Nhận hỗ trợ → Trả lời</span>
       </div>
       <div style="flex:1;min-height:0;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0;background:#fff;box-shadow:0 10px 30px -10px rgba(15,23,42,.15)">
         <iframe ref="{{ adminRef }}" src="./Quản Trị CSKH.dc.html" title="Quản trị" style="width:100%;height:100%;border:0;display:block"></iframe>
@@ -74,12 +91,13 @@ const SCRIPT = [
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 class Component extends DCLogic {
-  state = { running: false, step: 'Tự thao tác ở hai màn hình, hoặc bấm “Chạy kịch bản”.' };
+  state = { vw: 1440, pane: 'cust', running: false, step: 'Tự thao tác ở hai màn hình, hoặc bấm “Chạy kịch bản”.' };
   custRef = React.createRef();
   adminRef = React.createRef();
   runId = 0;
 
-  componentWillUnmount() { this.runId++; }
+  componentDidMount() { this.onResize = () => { const w = window.innerWidth; if ((w < 900) !== (this.state.vw < 900)) this.setState({ vw: w }); }; this.setState({ vw: window.innerWidth }); window.addEventListener('resize', this.onResize); }
+  componentWillUnmount() { this.runId++; window.removeEventListener('resize', this.onResize); }
   alive(id) { return id === this.runId; }
   focusAdmin(convId) { try { this.adminRef.current.contentWindow.postMessage({ type: 'vg-focus', id: convId }, '*'); } catch (e) {} }
 
@@ -108,20 +126,20 @@ class Component extends DCLogic {
     this.focusAdmin(convId);
     for (const s of SCRIPT) {
       if (!this.alive(id)) return;
-      if (s.who === 'customer') { this.setState({ step: 'Khách hàng đang nhắn…' }); await sleep(800); await this.type(convId, 'customer', s.text, id); await sleep(1200); }
-      else if (s.who === 'agent') { this.setState({ step: 'Tổng đài viên đang trả lời…' }); await sleep(900); await this.type(convId, 'agent', s.text, id); await sleep(1400); }
+      if (s.who === 'customer') { this.setState({ step: 'Khách hàng đang nhắn…', pane: 'cust' }); await sleep(800); await this.type(convId, 'customer', s.text, id); await sleep(1200); }
+      else if (s.who === 'agent') { this.setState({ step: 'Tổng đài viên đang trả lời…', pane: 'admin' }); await sleep(900); await this.type(convId, 'agent', s.text, id); await sleep(1400); }
       else if (s.who === 'accept') {
-        this.setState({ step: 'Tổng đài viên tiếp nhận yêu cầu…' }); await sleep(2200); if (!this.alive(id)) return;
+        this.setState({ step: 'Tổng đài viên tiếp nhận yêu cầu…', pane: 'admin' }); await sleep(2200); if (!this.alive(id)) return;
         st.updateConv(convId, c => { c.status = 'active'; c.acceptedAt = Date.now(); c.agentName = AGENT; c.messages.push({ id: st.uid(), from: 'system', text: AGENT + ' đã tiếp nhận hỗ trợ', ts: Date.now() }); });
         this.focusAdmin(convId); await sleep(1000);
       }
       else if (s.who === 'close') {
-        this.setState({ step: 'Tổng đài viên đóng hội thoại…' }); await sleep(1500); if (!this.alive(id)) return;
+        this.setState({ step: 'Tổng đài viên đóng hội thoại…', pane: 'admin' }); await sleep(1500); if (!this.alive(id)) return;
         st.updateConv(convId, c => { c.status = 'closed'; c.closedAt = Date.now(); c.messages.push({ id: st.uid(), from: 'system', text: 'Tổng đài viên đã đóng hội thoại', ts: Date.now() }); });
         this.focusAdmin(convId); await sleep(1600);
       }
       else if (s.who === 'rate') {
-        this.setState({ step: 'Khách hàng đánh giá 5 sao…' }); await sleep(800); if (!this.alive(id)) return;
+        this.setState({ step: 'Khách hàng đánh giá 5 sao…', pane: 'cust' }); await sleep(800); if (!this.alive(id)) return;
         st.updateConv(convId, c => { c.rating = 5; });
       }
     }
@@ -138,8 +156,13 @@ class Component extends DCLogic {
   };
 
   renderVals() {
-    const r = this.state.running;
+    const r = this.state.running, narrow = this.state.vw < 900, pane = this.state.pane;
+    const paneStyle = show => ({ display: show ? 'flex' : 'none', flexDirection: 'column', gap: 8, minHeight: 0 });
     return {
+      narrow,
+      custPane: paneStyle(!narrow || pane === 'cust'), adminPane: paneStyle(!narrow || pane === 'admin'),
+      panes: [['cust', 'Khách hàng'], ['admin', 'Tổng đài viên']].map(([id, label]) => ({ label, pick: () => this.setState({ pane: id }),
+        style: { flex: 1, font: 'inherit', fontSize: 13, fontWeight: 600, padding: '8px 6px', border: 'none', borderRadius: 9, cursor: 'pointer', background: pane === id ? '#fff' : 'transparent', color: pane === id ? '#C8102E' : '#475569', boxShadow: pane === id ? '0 1px 3px rgba(15,23,42,.1)' : 'none' } })),
       custRef: this.custRef, adminRef: this.adminRef,
       run: this.run, reset: this.reset,
       runLabel: r ? 'Dừng kịch bản' : 'Chạy kịch bản',

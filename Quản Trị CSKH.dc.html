@@ -18,19 +18,40 @@ a{color:#C8102E;text-decoration:none}a:hover{color:#a30c24}
 @keyframes vgDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
 textarea:focus,input:focus{outline:none}
 button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid #C8102E;outline-offset:2px}
+.vg-app{height:100vh;height:100dvh}
+.vg-strip{scrollbar-width:none}.vg-strip::-webkit-scrollbar{display:none}
+@media (max-width:1179px){ .vg-main{padding:12px!important;gap:12px!important} }
+@media (max-width:767px){
+  .vg-hdr{padding:0 12px!important;height:60px!important;gap:8px!important}
+  .vg-hdr-left{gap:10px!important;min-width:0}
+  .vg-logo{width:34px!important;height:34px!important}
+  .vg-kicker{font-size:10px!important}
+  .vg-brand{font-size:17px!important}
+  .vg-brand-sub,.vg-agent-txt,.vg-hide-sm{display:none!important}
+  .vg-hdr-right{gap:8px!important}
+  .vg-main{padding:0!important;gap:0!important}
+  .vg-pane{width:auto!important;flex:1!important;border-radius:0!important;border:none!important;box-shadow:none!important}
+  .vg-chat-hd{padding:10px 12px!important;gap:8px!important}
+  .vg-chat-hd button:not(.vg-ico){padding:8px 10px!important}
+  .vg-msgs{padding:14px 12px!important}
+  .vg-bubble{max-width:88%!important}
+  .vg-tpl{flex-wrap:nowrap!important;overflow-x:auto;margin:0 -12px;padding:0 12px}
+  .vg-composer{padding:10px 12px calc(10px + env(safe-area-inset-bottom))!important}
+  input,textarea{font-size:16px!important}
+}
 </style>
 </helmet>
-<div style="height:100vh;display:flex;flex-direction:column;overflow:hidden">
+<div class="vg-app" style="display:flex;flex-direction:column;overflow:hidden">
   <header style="flex:none;background:#fff;border-bottom:1px solid rgba(226,232,240,.8)">
-    <div style="padding:0 24px;height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px">
-      <div style="display:flex;align-items:center;gap:14px">
-        <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex:none;box-shadow:0 4px 8px rgba(200,16,46,.2);background:#e5e7eb"><img src="https://inviva.vn/wp-content/uploads/2026/04/logo-vingroup-vector-01.png" alt="Vingroup" style="width:100%;height:100%;object-fit:contain"></div>
+    <div class="vg-hdr" style="padding:0 24px;height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <div class="vg-hdr-left" style="display:flex;align-items:center;gap:14px">
+        <div class="vg-logo" style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex:none;box-shadow:0 4px 8px rgba(200,16,46,.2);background:#e5e7eb"><img src="https://inviva.vn/wp-content/uploads/2026/04/logo-vingroup-vector-01.png" alt="Vingroup" style="width:100%;height:100%;object-fit:contain"></div>
         <div style="display:flex;flex-direction:column;gap:2px">
-          <span style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;color:#C8102E">Trang Quản Trị CSKH</span>
-          <span style="font-size:20px;font-weight:700;letter-spacing:-.02em;color:#0F172A;line-height:1;white-space:nowrap">VINGROUP <span style="font-weight:300;color:#64748B;font-size:14px;letter-spacing:0">Live Chat Console</span></span>
+          <span class="vg-kicker" style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;color:#C8102E;white-space:nowrap">Trang Quản Trị CSKH</span>
+          <span class="vg-brand" style="font-size:20px;font-weight:700;letter-spacing:-.02em;color:#0F172A;line-height:1;white-space:nowrap">VINGROUP <span class="vg-brand-sub" style="font-weight:300;color:#64748B;font-size:14px;letter-spacing:0">Live Chat Console</span></span>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:20px">
+      <div class="vg-hdr-right" style="display:flex;align-items:center;gap:20px">
         <sc-if value="{{ showStats }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:8px">
           <sc-for list="{{ stats }}" as="st" hint-placeholder-count="3">
             <div style="background:#F8FAFC;border:1px solid #F1F5F9;border-radius:12px;padding:6px 14px;white-space:nowrap">
@@ -43,8 +64,8 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
           <span style="{{ availDot }}"></span>{{ availLabel }}
         </button>
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#C8102E,#8f0b21);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">TL</div>
-          <div style="display:flex;flex-direction:column;white-space:nowrap">
+          <div style="width:38px;height:38px;flex:none;border-radius:50%;background:linear-gradient(135deg,#C8102E,#8f0b21);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">TL</div>
+          <div class="vg-agent-txt" style="display:flex;flex-direction:column;white-space:nowrap">
             <span style="font-size:14px;font-weight:600;color:#0F172A">Nguyễn Thùy Linh</span>
             <span style="font-size:11px;color:#94A3B8">Tổng đài viên · Ca sáng</span>
           </div>
@@ -53,8 +74,9 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
     </div>
   </header>
 
-  <main style="flex:1;min-height:0;display:flex;gap:16px;padding:16px">
-    <aside style="width:320px;flex:none;display:flex;flex-direction:column;background:#fff;border:1px solid #E2E8F0;border-radius:20px;overflow:hidden">
+  <main class="vg-main" style="flex:1;min-height:0;display:flex;gap:16px;padding:16px">
+    <sc-if value="{{ showList }}" hint-placeholder-val="{{ true }}">
+    <aside class="vg-pane" style="width:320px;flex:none;display:flex;flex-direction:column;background:#fff;border:1px solid #E2E8F0;border-radius:20px;overflow:hidden">
       <div style="padding:16px 16px 12px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid #F1F5F9">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:16px;font-weight:700;color:#0F172A">Hội thoại</span>
@@ -98,23 +120,31 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
         </sc-if>
       </div>
     </aside>
+    </sc-if>
 
-    <section style="flex:1;min-width:0;display:flex;flex-direction:column;background:#fff;border:1px solid #E2E8F0;border-radius:20px;overflow:hidden;box-shadow:0 20px 40px -15px rgba(200,16,46,.06)">
-      <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid #F1F5F9">
-        <div style="display:flex;align-items:center;gap:12px;min-width:0">
-          <div style="{{ cur.avatar }}">{{ cur.initials }}</div>
+    <sc-if value="{{ showChat }}" hint-placeholder-val="{{ true }}">
+    <section class="vg-pane" style="flex:1;min-width:0;display:flex;flex-direction:column;background:#fff;border:1px solid #E2E8F0;border-radius:20px;overflow:hidden;box-shadow:0 20px 40px -15px rgba(200,16,46,.06)">
+      <div class="vg-chat-hd" style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid #F1F5F9">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+          <sc-if value="{{ showBack }}">
+            <button class="vg-ico" onClick="{{ back }}" title="Danh sách hội thoại" aria-label="Quay lại danh sách" style="width:36px;height:36px;flex:none;border-radius:10px;border:1px solid #E2E8F0;background:#fff;color:#334155;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+          </sc-if>
+          <div class="vg-hide-sm" style="{{ cur.avatar }}">{{ cur.initials }}</div>
           <div style="min-width:0">
-            <div style="font-weight:700;color:#0F172A;font-size:15px">{{ cur.name }}</div>
+            <div style="font-weight:700;color:#0F172A;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ cur.name }}</div>
             <div style="font-size:12px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ cur.ticket }} · {{ cur.service }} · {{ cur.statusText }}</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;flex:none">
+          <sc-if value="{{ showInfoBtn }}">
+            <button class="vg-ico" onClick="{{ openInfo }}" title="Thông tin khách hàng" aria-label="Thông tin khách hàng" style="width:36px;height:36px;flex:none;border-radius:10px;border:1px solid #E2E8F0;background:#fff;color:#334155;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0" style-hover="border-color:#C8102E;color:#C8102E"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01" stroke-linecap="round"></path></svg></button>
+          </sc-if>
           <sc-if value="{{ cur.isWaiting }}">
             <button onClick="{{ accept }}" style="font:inherit;font-size:13px;font-weight:700;color:#fff;background:#C8102E;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;white-space:nowrap" style-hover="background:#a30c24">Nhận hỗ trợ</button>
           </sc-if>
           <sc-if value="{{ cur.isActive }}">
-            <button onClick="{{ transfer }}" style="font:inherit;font-size:13px;font-weight:600;color:#334155;background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E;color:#C8102E">Chuyển tiếp</button>
-            <button onClick="{{ closeConv }}" style="font:inherit;font-size:13px;font-weight:600;color:#C8102E;background:#FEF2F2;border:1px solid transparent;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E">Đóng hội thoại</button>
+            <button class="vg-hide-sm" onClick="{{ transfer }}" style="font:inherit;font-size:13px;font-weight:600;color:#334155;background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E;color:#C8102E">Chuyển tiếp</button>
+            <button onClick="{{ closeConv }}" style="font:inherit;font-size:13px;font-weight:600;color:#C8102E;background:#FEF2F2;border:1px solid transparent;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E">{{ closeLabel }}</button>
           </sc-if>
           <sc-if value="{{ cur.isClosed }}">
             <button onClick="{{ reopen }}" style="font:inherit;font-size:13px;font-weight:600;color:#334155;background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E;color:#C8102E">Mở lại</button>
@@ -122,13 +152,13 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
         </div>
       </div>
 
-      <div ref="{{ scrollRef }}" style="flex:1;min-height:0;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:12px;background:#FAFAFB">
+      <div class="vg-msgs" ref="{{ scrollRef }}" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 24px;display:flex;flex-direction:column;gap:12px;background:#FAFAFB">
         <sc-for list="{{ messages }}" as="m" hint-placeholder-count="4">
           <sc-if value="{{ m.isSystem }}">
             <div style="align-self:center;font-size:12px;color:#64748B;background:#F1F5F9;padding:5px 12px;border-radius:999px">{{ m.text }}</div>
           </sc-if>
           <sc-if value="{{ m.isCustomer }}">
-            <div style="display:flex;align-items:flex-end;gap:8px;max-width:72%">
+            <div class="vg-bubble" style="display:flex;align-items:flex-end;gap:8px;max-width:72%">
               <div style="{{ cur.avatarSm }}">{{ cur.initials }}</div>
               <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0">
                 <sc-if value="{{ m.image }}"><button onClick="{{ m.open }}" style="padding:0;border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;cursor:zoom-in;background:#fff;max-width:240px"><img src="{{ m.image }}" alt="Ảnh khách gửi" style="display:block;width:100%;max-height:260px;object-fit:cover"></button></sc-if>
@@ -138,7 +168,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
             </div>
           </sc-if>
           <sc-if value="{{ m.isAgent }}">
-            <div style="align-self:flex-end;display:flex;align-items:center;gap:6px;max-width:72%">
+            <div class="vg-bubble" style="align-self:flex-end;display:flex;align-items:center;gap:6px;max-width:72%">
               <button onClick="{{ m.del }}" title="Xóa tin nhắn" style="flex:none;width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:#CBD5E1;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#FEF2F2;color:#C8102E"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4h6v3" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:0">
                 <sc-if value="{{ m.image }}"><button onClick="{{ m.open }}" style="padding:0;border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;cursor:zoom-in;background:#fff;max-width:240px"><img src="{{ m.image }}" alt="Ảnh đã gửi" style="display:block;width:100%;max-height:260px;object-fit:cover"></button></sc-if>
@@ -157,7 +187,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
       </div>
 
       <sc-if value="{{ cur.isWaiting }}">
-        <div style="flex:none;padding:18px 20px;border-top:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#FFFBEB">
+        <div style="flex:none;padding:14px 16px;border-top:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#FFFBEB">
           <span style="font-size:13px;color:#92400E">Khách hàng đang chờ {{ cur.waitText }}. Nhận hỗ trợ để bắt đầu trả lời.</span>
           <button onClick="{{ accept }}" style="font:inherit;font-size:13px;font-weight:700;color:#fff;background:#C8102E;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;white-space:nowrap" style-hover="background:#a30c24">Nhận hỗ trợ</button>
         </div>
@@ -166,10 +196,10 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
         <div style="flex:none;padding:18px 20px;border-top:1px solid #F1F5F9;font-size:13px;color:#64748B;text-align:center">Hội thoại đã đóng · Khách hàng đánh giá {{ cur.rating }}</div>
       </sc-if>
       <sc-if value="{{ cur.isActive }}" hint-placeholder-val="{{ true }}">
-        <div style="flex:none;padding:12px 16px 16px;border-top:1px solid #F1F5F9;background:#fff;display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="vg-composer" style="flex:none;padding:12px 16px 16px;border-top:1px solid #F1F5F9;background:#fff;display:flex;flex-direction:column;gap:10px">
+          <div class="vg-tpl vg-strip" style="display:flex;gap:6px;flex-wrap:wrap">
             <sc-for list="{{ templates }}" as="tp" hint-placeholder-count="4">
-              <button onClick="{{ tp.use }}" style="font:inherit;font-size:12px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:999px;padding:5px 12px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E;color:#C8102E">{{ tp.label }}</button>
+              <button onClick="{{ tp.use }}" style="flex:none;font:inherit;font-size:12px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:999px;padding:5px 12px;cursor:pointer;white-space:nowrap" style-hover="border-color:#C8102E;color:#C8102E">{{ tp.label }}</button>
             </sc-for>
           </div>
           <sc-if value="{{ pendingImage }}">
@@ -187,9 +217,19 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
         </div>
       </sc-if>
     </section>
+    </sc-if>
 
+    <sc-if value="{{ infoOverlay }}">
+      <div onClick="{{ closeInfo }}" style="position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:79"></div>
+    </sc-if>
     <sc-if value="{{ showInfo }}" hint-placeholder-val="{{ true }}">
-    <aside style="width:300px;flex:none;display:flex;flex-direction:column;gap:16px;overflow-y:auto">
+    <aside style="{{ infoStyle }}">
+      <sc-if value="{{ infoOverlay }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:16px;font-weight:700;color:#0F172A">Thông tin khách hàng</span>
+          <button onClick="{{ closeInfo }}" aria-label="Đóng" style="width:36px;height:36px;border-radius:10px;border:1px solid #E2E8F0;background:#fff;color:#334155;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"></path></svg></button>
+        </div>
+      </sc-if>
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="{{ cur.avatarLg }}">{{ cur.initials }}</div>
@@ -227,10 +267,10 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
   </main>
 
   <sc-if value="{{ toast }}">
-    <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#0F172A;color:#fff;font-size:13px;padding:10px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(15,23,42,.3);z-index:90">{{ toast }}</div>
+    <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);max-width:calc(100vw - 32px);box-sizing:border-box;text-align:center;background:#0F172A;color:#fff;font-size:13px;padding:10px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(15,23,42,.3);z-index:90">{{ toast }}</div>
   </sc-if>
   <sc-if value="{{ lightbox }}">
-    <div onClick="{{ closeLightbox }}" style="position:fixed;inset:0;background:rgba(15,23,42,.85);display:flex;align-items:center;justify-content:center;z-index:100;padding:40px;cursor:zoom-out">
+    <div onClick="{{ closeLightbox }}" style="position:fixed;inset:0;background:rgba(15,23,42,.85);display:flex;align-items:center;justify-content:center;z-index:100;padding:clamp(12px,5vw,40px);cursor:zoom-out">
       <img src="{{ lightbox }}" alt="Hình ảnh cỡ đầy đủ" style="max-width:100%;max-height:100%;border-radius:12px">
     </div>
   </sc-if>
@@ -266,12 +306,14 @@ const seedConvs = (uid) => {
 const EMPTY = { id: null, name: 'Chưa có hội thoại', initials: '—', ticket: '—', service: '—', status: 'none', messages: [], history: [] };
 
 class Component extends DCLogic {
-  state = { data: { convs: [] }, activeId: null, tab: 'waiting', q: '', draft: '', pendingImage: null, available: true, typing: {}, lightbox: null, toast: '', wide: true, mid: true };
+  state = { data: { convs: [] }, activeId: null, tab: 'waiting', q: '', draft: '', pendingImage: null, available: true, typing: {}, lightbox: null, toast: '', vw: 1440, mobileView: 'list', infoOpen: false };
   scrollRef = React.createRef();
   fileRef = React.createRef();
 
   componentDidMount() {
-    this.onResize = () => { const w = window.innerWidth >= 1180; const m = window.innerWidth >= 1100; if (w !== this.state.wide || m !== this.state.mid) this.setState({ wide: w, mid: m }); };
+    const bucket = w => (w >= 1180) + ',' + (w >= 1100) + ',' + (w >= 768);
+    this.onResize = () => { const w = window.innerWidth; if (bucket(w) !== bucket(this.state.vw)) this.setState({ vw: w, infoOpen: w >= 1180 ? false : this.state.infoOpen }); };
+    this.setState({ vw: window.innerWidth });
     this.onResize(); window.addEventListener('resize', this.onResize);
     const st = window.VGStore; if (!st) return;
     st.mutate(d => { if (!d.seeded) { d.seeded = true; d.convs.push(...seedConvs(st.uid)); } });
@@ -288,7 +330,7 @@ class Component extends DCLogic {
     });
     this.onVis = () => this.onData(st.load());
     document.addEventListener('visibilitychange', this.onVis);
-    this.onMsg = e => { const d = e.data; if (d && d.type === 'vg-focus') { const c = st.get(d.id); if (c) { this.setState({ activeId: c.id, tab: c.status, q: '' }); this.onData(st.load()); } } };
+    this.onMsg = e => { const d = e.data; if (d && d.type === 'vg-focus') { const c = st.get(d.id); if (c) { this.setState({ activeId: c.id, tab: c.status, q: '', mobileView: 'chat' }); this.onData(st.load()); } } };
     window.addEventListener('message', this.onMsg);
     this.tick = setInterval(() => this.forceUpdate(), 20000);
     setTimeout(() => this.onData(st.load()), 0);
@@ -300,9 +342,11 @@ class Component extends DCLogic {
     window.removeEventListener('message', this.onMsg);
     clearInterval(this.tick); clearTimeout(this.toastT);
   }
-  componentDidUpdate(pp, ps) {
+  componentDidUpdate() {
     const el = this.scrollRef.current;
-    if (el && (ps.data !== this.state.data || ps.activeId !== this.state.activeId || ps.typing !== this.state.typing)) el.scrollTop = el.scrollHeight;
+    const k = [this.state.data, this.state.activeId, this.state.typing], p = this._prevScrollKey;
+    this._prevScrollKey = k;
+    if (el && (!p || p[0] !== k[0] || p[1] !== k[1] || p[2] !== k[2])) el.scrollTop = el.scrollHeight;
   }
 
   onData(d) {
@@ -365,9 +409,10 @@ class Component extends DCLogic {
     const waitMin = mins(Date.now() - (c.createdAt || Date.now()));
     const statusText = { waiting: 'Đang chờ ' + waitMin + ' phút', active: c.customerOnline ? 'Đang trực tuyến' : 'Ngoại tuyến', closed: 'Đã đóng', none: 'Chọn một hội thoại để bắt đầu' }[c.status];
     const up = fn => c0 && st.updateConv(c0.id, fn);
+    const wide = s.vw >= 1180, narrow = s.vw < 768;
     return {
       stats: [{ label: 'Đang chờ', value: counts.waiting }, { label: 'Đang xử lý', value: counts.active }, { label: 'TG tiếp nhận TB', value: avg ? secs(avg) : '—' }],
-      showStats: s.mid,
+      showStats: s.vw >= 1100,
       availLabel: s.available ? 'Sẵn sàng' : 'Tạm vắng',
       availStyle: { font: 'inherit', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap', background: s.available ? '#ECFDF5' : '#FFFBEB', color: s.available ? '#065F46' : '#92400E', border: '1px solid ' + (s.available ? 'rgba(167,243,208,.8)' : '#FDE68A') },
       availDot: { width: 9, height: 9, borderRadius: '50%', background: s.available ? '#10B981' : '#F59E0B', animation: s.available ? 'vgPulse 2s infinite' : 'none' },
@@ -386,7 +431,7 @@ class Component extends DCLogic {
         preview: s.typing[x.id] ? 'Đang soạn tin…' : lm ? (lm.from === 'agent' ? 'Bạn: ' : '') + (lm.text || '[Hình ảnh]') : 'Chưa có tin nhắn',
         waitText: x.status === 'waiting' ? 'Chờ ' + mins(Date.now() - x.createdAt) + ' phút' : '',
         avatar: av(42, 14, colorOf(x.id)),
-        pick: () => { this.setState({ activeId: x.id, draft: '', pendingImage: null }); if (unreadOf(x)) st.updateConv(x.id, y => y.messages.forEach(m => { if (m.from === 'customer') m.seen = true; })); },
+        pick: () => { this.setState({ activeId: x.id, draft: '', pendingImage: null, mobileView: 'chat' }); if (unreadOf(x)) st.updateConv(x.id, y => y.messages.forEach(m => { if (m.from === 'customer') m.seen = true; })); },
         style: { display: 'flex', gap: 12, alignItems: 'flex-start', textAlign: 'left', font: 'inherit', width: '100%', padding: 12, borderRadius: 14, cursor: 'pointer', border: '1px solid ' + (x.id === c.id ? 'rgba(200,16,46,.3)' : 'transparent'), background: x.id === c.id ? '#FEF2F2' : 'transparent' } }; }),
       emptyList: list.length === 0,
       cur: { name: c.name, initials: c.initials, ticket: c.ticket, service: c.service, tier: c.tier || '', rating: c.rating ? c.rating + '/5 sao' : 'chưa có', statusText, waitText: waitMin + ' phút',
@@ -415,7 +460,15 @@ class Component extends DCLogic {
       clearImage: () => this.setState({ pendingImage: null }),
       send: () => this.send(),
       scrollRef: this.scrollRef, fileRef: this.fileRef,
-      showInfo: (this.props.showCustomerPanel ?? true) && s.wide,
+      showInfo: !!c0 && ((wide && (this.props.showCustomerPanel ?? true)) || (!wide && s.infoOpen)),
+      infoOverlay: !wide && s.infoOpen && !!c0,
+      infoStyle: wide ? { width: 300, flex: 'none', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }
+        : { position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(360px, 100%)', boxSizing: 'border-box', zIndex: 80, background: '#F1F5F9', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', boxShadow: '-10px 0 40px rgba(15,23,42,.2)' },
+      showInfoBtn: !wide && !!c0,
+      openInfo: () => this.setState({ infoOpen: true }), closeInfo: () => this.setState({ infoOpen: false }),
+      showList: !narrow || s.mobileView === 'list', showChat: !narrow || s.mobileView === 'chat',
+      showBack: narrow, back: () => this.setState({ mobileView: 'list', infoOpen: false }),
+      closeLabel: narrow ? 'Đóng' : 'Đóng hội thoại',
       note: c.note || '', onNote: e => { const v = e.target.value; up(y => { y.note = v; }); },
       toast: s.toast, lightbox: s.lightbox, closeLightbox: () => this.setState({ lightbox: null })
     };
